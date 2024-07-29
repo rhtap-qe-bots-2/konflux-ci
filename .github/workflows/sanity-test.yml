@@ -6,8 +6,23 @@ on:
   merge_group:
     types: [checks_requested]
 jobs:
+  check-org-membership:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check if PR author is a member of the organization
+      id: org-check
+      run: |
+        ORG="psturc-org"
+        AUTHOR="${{ github.event.pull_request.user.login }}"
+        MEMBERSHIP=$(gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR -q .state)
+        if [ "$MEMBERSHIP" != "active" ]; then
+          echo "PR author is not a member of the organization."
+          exit 1
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   sanity-test:
-    if: contains(github.event.pull_request.labels.*.name, 'ok-to-test')
+    if: contains(github.event.pull_request.labels.*.name, 'ok-to-test') || success()
     runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space (Ubuntu)
