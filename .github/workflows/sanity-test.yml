@@ -18,7 +18,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   sanity-test:
-    if: contains(github.event.pull_request.labels.*.name, 'ok-to-test')
+    # if: contains(github.event.pull_request.labels.*.name, 'ok-to-test')
     runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space (Ubuntu)
