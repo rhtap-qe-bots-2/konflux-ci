@@ -5,18 +5,20 @@ on:
     types: [opened, synchronize, reopened, labeled]
   merge_group:
     types: [checks_requested]
+  pull_request_review:
+    types: [submitted]
 jobs:
   sanity-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Check if PR author is a member of the organization
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'ok-to-test') }}
+      - name: Check if PR author is a member of the organization (unless PR is approved or contains 'ok-to-test' label)
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'ok-to-test') && !(github.event.review.state == 'approved') }}
         run: |
           ORG="psturc-org"
           AUTHOR="${{ github.event.pull_request.user.login }}"
           gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
