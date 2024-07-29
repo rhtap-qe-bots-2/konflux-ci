@@ -7,6 +7,7 @@ on:
     types: [checks_requested]
 jobs:
   check-org-membership:
+    if: ! contains(github.event.pull_request.labels.*.name, 'ok-to-test')
     runs-on: ubuntu-latest
     steps:
     - name: Check if PR author is a member of the organization
@@ -16,9 +17,9 @@ jobs:
         AUTHOR="${{ github.event.pull_request.user.login }}"
         gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
   sanity-test:
-    # if: contains(github.event.pull_request.labels.*.name, 'ok-to-test')
+    needs: check-org-membership
     runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space (Ubuntu)
