@@ -2,11 +2,12 @@ name: Sanity Test
 
 on:
   pull_request_target:
-    types: [auto_merge_enabled]
+    types: [opened, synchronize, reopened, labeled]
   merge_group:
     types: [checks_requested]
 jobs:
   sanity-test:
+    if: contains(github.event.pull_request.labels.*.name, 'ok-to-test')
     runs-on: ubuntu-latest
     steps:
       - name: Free Disk Space (Ubuntu)
