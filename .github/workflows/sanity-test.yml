@@ -6,22 +6,18 @@ on:
   merge_group:
     types: [checks_requested]
 jobs:
-  check-org-membership:
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'ok-to-test') }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check if PR author is a member of the organization
-      id: org-check
-      run: |
-        ORG="psturc-org"
-        AUTHOR="${{ github.event.pull_request.user.login }}"
-        gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
   sanity-test:
-    needs: check-org-membership
     runs-on: ubuntu-latest
     steps:
+      - name: Check if PR author is a member of the organization
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'ok-to-test') }}
+        run: |
+          ORG="psturc-org"
+          AUTHOR="${{ github.event.pull_request.user.login }}"
+          gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
