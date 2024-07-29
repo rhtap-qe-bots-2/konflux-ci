@@ -14,11 +14,7 @@ jobs:
       run: |
         ORG="psturc-org"
         AUTHOR="${{ github.event.pull_request.user.login }}"
-        MEMBERSHIP=$(gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR -q .state)
-        if [ "$MEMBERSHIP" != "active" ]; then
-          echo "PR author is not a member of the organization."
-          exit 1
-        fi
+        gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   sanity-test:
