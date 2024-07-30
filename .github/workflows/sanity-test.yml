@@ -15,9 +15,9 @@ jobs:
         continue-on-error: true
         id: org-check
         run: |
-          ORG="psturc-org"
+          ORG="${{ github.repository_owner }}"
           AUTHOR="${{ github.event.pull_request.user.login }}"
-          if ! gh api /orgs/$ORG/members/fakevalue; then
+          if ! gh api /orgs/$ORG/members/$AUTHOR; then
             echo '### ❌ PR author is not a member of GitHub organization' >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
