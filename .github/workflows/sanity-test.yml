@@ -6,18 +6,29 @@ on:
   merge_group:
     types: [checks_requested]
 jobs:
-  sanity-test:
+  check-org-membership:
     runs-on: ubuntu-latest
     steps:
       - name: Check if PR author is a member of the organization
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'ok-to-test') }}
+        id: org-check
+        continue-on-error: true
         run: |
           ORG="psturc-org"
           AUTHOR="${{ github.event.pull_request.user.login }}"
-          gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR
+          MEMBERSHIP=$(gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/memberships/$AUTHOR -q .state)
+          if [[ "$MEMBERSHIP" == "active" ]]; then
+            echo "ORG_MEMBER=true" >> $GITHUB_ENV
+            exit 0
+          else
+            exit 1
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      
+  sanity-test:
+    if: ${{ (github.event.pull_request.user.login == "renovate[bot]") || contains(github.event.pull_request.labels.*.name, 'ok-to-test') || env.ORG_MEMBER == 'true' }}
+    needs: check-org-membership
+    runs-on: ubuntu-latest
+    steps:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
