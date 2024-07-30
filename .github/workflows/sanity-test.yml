@@ -11,13 +11,12 @@ jobs:
     steps:
       - name: Check if PR author is a member of the organization
         id: org-check
-        continue-on-error: true
         run: |
           ORG="psturc-org"
           AUTHOR="${{ github.event.pull_request.user.login }}"
           MEMBERSHIP=$(gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/memberships/$AUTHOR -q .state)
           if [[ "$MEMBERSHIP" == "active" ]]; then
-            echo "ORG_MEMBER=true" >> $GITHUB_ENV
+            echo "ORG_MEMBER=true" >> $GITHUB_OUTPUT
             exit 0
           else
             exit 1
