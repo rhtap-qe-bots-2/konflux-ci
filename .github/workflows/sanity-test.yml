@@ -17,7 +17,7 @@ jobs:
         run: |
           ORG="psturc-org"
           AUTHOR="${{ github.event.pull_request.user.login }}"
-          if ! gh api /orgs/$ORG/members/$AUTHOR; then
+          if ! gh api /orgs/$ORG/members/fakevalue; then
             echo '### ❌ PR author is not a member of GitHub organization' >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
