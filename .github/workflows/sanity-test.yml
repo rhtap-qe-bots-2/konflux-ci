@@ -25,7 +25,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       
   sanity-test:
-    if: ${{ (github.event.pull_request.user.login == 'renovate[bot]') || contains(github.event.pull_request.labels.*.name, 'ok-to-test') || ($ORG_MEMBER == 'true') }}
+    if: ${{ (github.event.pull_request.user.login == 'renovate[bot]') || contains(github.event.pull_request.labels.*.name, 'ok-to-test') || (needs.check-org-membership.result == 'success') }}
     needs: check-org-membership
     runs-on: ubuntu-latest
     steps:
