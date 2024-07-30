@@ -6,50 +6,29 @@ on:
   merge_group:
     types: [checks_requested]
 jobs:
-  check-conditions:
+  check-org-membership:
     runs-on: ubuntu-latest
     steps:
       - name: Check if PR author is a member of the organization
         id: org-check
+        continue-on-error: true
         run: |
           ORG="psturc-org"
           AUTHOR="${{ github.event.pull_request.user.login }}"
-          MEMBERSHIP=$(gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR -q .state)
-          echo "membership=$MEMBERSHIP" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      - name: Check if "ok-to-test" label is present
-        id: label-check
-        run: |
-          LABELS=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name')
-          echo "labels=$LABELS" >> $GITHUB_ENV
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
-      - name: Determine if workflow should run
-        id: should-run
-        run: |
-          if [[ "${{ env.membership }}" == "active" ]]; then
-            echo "should_run=true" >> $GITHUB_ENV
-          elif [[ "${{ env.labels }}" == *"ok-to-test"* ]]; then
-            echo "should_run=true" >> $GITHUB_ENV
+          MEMBERSHIP=$(gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/memberships/$AUTHOR -q .state)
+          if [[ "$MEMBERSHIP" == "active" ]]; then
+            echo "ORG_MEMBER=true" >> $GITHUB_ENV
+            exit 0
           else
-            echo "should_run=false" >> $GITHUB_ENV
-          fi
+            exit 1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      
   sanity-test:
-    needs: check-conditions
+    if: ${{ (github.event.pull_request.user.login == "renovate[bot]") || contains(github.event.pull_request.labels.*.name, 'ok-to-test') || env.ORG_MEMBER == 'true' }}
+    needs: check-org-membership
     runs-on: ubuntu-latest
     steps:
-      - name: Check if PR author is a member of the organization or PR contains 'ok-to-test' label
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'ok-to-test') && !(github.event.review.state == 'approved') }}
-        run: |
-          ORG="psturc-org"
-          AUTHOR="${{ github.event.pull_request.user.login }}"
-          gh api -H "Accept: application/vnd.github.v3+json" /orgs/$ORG/members/$AUTHOR
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
