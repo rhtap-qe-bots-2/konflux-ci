@@ -12,6 +12,7 @@ jobs:
       org-member: ${{ steps.org-check.outputs.org-member }}
     steps:
       - name: Check if PR author is a member of the organization
+        continue-on-error: true
         id: org-check
         run: |
           ORG="psturc-org"
